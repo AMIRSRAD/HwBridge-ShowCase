@@ -108,6 +108,8 @@ When `DevMode=1`, the local panel includes:
 - Migration/status plan: `docs/HwBridge_Supervisor_Zero_Regression_Migration_Plan.md`
 - Docs index: `docs/README.md`
 
-## Development Rule
+## Source Code
 
-Keep the main app in/out contract stable unless an explicit protocol cutover is planned and approved.
+This repository is intended for showcase and portfolio purposes only.
+
+The full source code remains private.
