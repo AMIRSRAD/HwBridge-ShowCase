@@ -1,115 +1,35 @@
 # HwBridge
 
-HwBridge is a Windows C++ hardware bridge for ATM/kiosk flows. It exposes hardware operations over TCP while isolating vendor SDK calls in dedicated worker processes.
+HwBridge is a Windows C++ hardware bridge for ATM and kiosk applications. It gives client applications a stable command interface while isolating vendor SDK calls in supervised worker processes.
 
-## What It Does
+This repository is a code-free project showcase. It contains screenshots and a C++ language marker for GitHub language detection; it does not contain the HwBridge implementation.
 
-- Receives JSON commands from a main app over TCP.
-- Routes commands by domain (`CS*`, `Primacy*`, biometric, smart card, USB/print, control).
-- Executes hardware calls inside worker processes (not in the server thread).
-- Returns framed JSON responses with a stable compatibility contract.
-- Supports headless operation and optional local ImGui UI (Dev mode).
+## UI Showcase
 
-## Screen Shots
+The optional development console provides operational visibility and local configuration tools.
 
-<img width="944" height="708" alt="3" src="https://github.com/user-attachments/assets/076effeb-ba0d-4363-a158-874afbe001ee" />
-<img width="946" height="708" alt="4" src="https://github.com/user-attachments/assets/45ad15e4-2461-4ae0-9262-b91e1ef6c5cb" />
+![HwBridge overview: listener state, active clients, and worker health](assets/screenshots/debug-ui-overview.png)
 
-## Architecture (Current)
+| Configuration | Command simulator |
+| --- | --- |
+| ![Configuration page](assets/screenshots/debug-ui-configuration.png) | ![Command simulator page](assets/screenshots/debug-ui-simulator.png) |
 
-- Supervisor: `main.cpp`
-- TCP server/session: `server/server.cpp`, `server/clienthandler.cpp`
-- Command router/contracts: `common/commands/*`
-- Domain handlers: `common/handlers/*`
-- Worker host/modes: `workers/WorkerModes.cpp`
-- Device modules: `modules/*`
+![Logs page with pause, autoscroll, filters, search, and export](assets/screenshots/debug-ui-logs.png)
 
-Biometric devices currently supported:
-- Futronic: `FingerScan`
-- Aratek: `AFingerScan`
-- Suprema: `SFingerScan`
+## Architecture
 
-## Command Contract Summary
+- C++17 Windows supervisor with an optional Dear ImGui development interface.
+- Legacy TCP compatibility alongside multiplexed protocol-v2 TCP and local named-pipe IPC.
+- Dedicated worker processes isolate vendor SDK calls from the network and UI threads.
+- Worker health supervision tracks restarts and unavailable device lanes.
+- Device-specific handlers preserve the established ATM Engine request and response contract.
 
-- Transport: TCP IPv4
-- Inbound accepted:
-  - plain JSON
-  - 8-digit length-prefixed JSON
-- Outbound:
-  - always framed JSON (8-digit prefix + JSON body)
-- Primary request envelope:
+## Device Families
 
-```json
-{"DeviceName":"AtmEngine","Command":"<Command>","isReq":true,"TimeOut":60,"ExtraData":"","ExtraData1":""}
-```
+The project includes integrations for check scanners, card readers, fingerprint readers, Evolis printers, bill validators, cash and gold dispensers, and selected XFS device classes. Availability depends on the deployed vendor SDK and connected hardware.
 
-Full command catalog and real one-line request/response samples:
-- `docs/HwBridge_Test_Commands.md`
+## Protocol
 
-## Build (Windows)
+Legacy clients continue using the existing JSON request envelope. New clients can use protocol v2 over TCP or the local named pipe for request IDs, multiplexing, targeted cancellation, deadlines, and bounded framing.
 
-### Prerequisites
-
-- Visual Studio 2022 C++ toolchain (x86 target)
-- CMake 3.23+
-- Ninja
-- `vcpkg` installed at `C:\vcpkg-master` (as referenced by `CMakeLists.txt`)
-
-### Build Commands
-
-```powershell
-cmake -S . -B HwBridgeRelease -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build HwBridgeRelease --target HwBridge -j 8
-```
-
-Output binary:
-- `HwBridgeRelease/HwBridge.exe`
-
-## Runtime Configuration
-
-Main config file:
-- `m_config.ini` (next to executable)
-
-Important areas:
-- `[Network]` (listen port)
-- `[Features]` (queue mode, worker prewarm flags)
-- `[TimeoutPolicy]` (per-command default/cap timeouts)
-- `[WorkerHealth]` (worker heartbeat/restart supervision)
-
-Runtime asset/deployment manifest:
-- `docs/HwBridge_Runtime_Manifest.md`
-
-## UI Tools
-
-When `DevMode=1`, the local panel includes:
-- Dashboard worker/device health summary.
-- Operations monitor.
-- Registry/config tools.
-- Command simulator.
-- Device Tests tab with one-click smoke tests for scanner, card, biometric, Evolis, USB, and control commands.
-
-## Modes
-
-- Supervisor mode: default launch (`HwBridge.exe`)
-- Worker modes (internal use):
-  - `--checkscanner-worker`
-  - `--ncard-worker`
-  - `--bio-worker`
-  - `--suprima-worker`
-  - `--evolis-worker`
-  - `--ops-worker`
-
-## Documentation
-
-- Full technical documentation: `docs/HwBridge_Full_Documentation.md`
-- Command compatibility + examples: `docs/HwBridge_Test_Commands.md`
-- Runtime/deployment manifest: `docs/HwBridge_Runtime_Manifest.md`
-- Smoke/regression guide: `docs/HwBridge_Smoke_Test.md`
-- Migration/status plan: `docs/HwBridge_Supervisor_Zero_Regression_Migration_Plan.md`
-- Docs index: `docs/README.md`
-
-## Source Code
-
-This repository is intended for showcase and portfolio purposes only.
-
-The full source code remains private.
+The public command list and implementation source are maintained in the separate HwBridge project. This showcase intentionally has no device source code or SDK binaries.
